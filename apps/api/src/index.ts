@@ -1,17 +1,45 @@
-import express from "express";
-import cors from "cors";
-import dotenv from "dotenv";
+import app from "./app";
+import { env } from "./config/env";
+import { logger } from "./lib/logger";
+import { prisma } from "./db/prisma";
 
-dotenv.config();
+const server = app.listen(env.PORT, () => {
+  logger.info({ port: env.PORT, env: env.NODE_ENV }, `API running on http://localhost:${env.PORT}`);
+});
 
-const app = express();
+server.keepAliveTimeout = 65000;
+server.headersTimeout = 66000;
 
-app.use(cors({ origin: process.env.APP_URL, credentials: true }));
-app.use(express.json());
+async function gracefulShutdown(signal: string) {
+  logger.info({ signal }, "Received shutdown signal, closing gracefully...");
+  
+  server.close(async () => {
+    logger.info({}, "HTTP server closed");
+    
+    try {
+      await prisma.$disconnect();
+      logger.info({}, "Database connection closed");
+      process.exit(0);
+    } catch (error) {
+      logger.error({ error }, "Error during shutdown");
+      process.exit(1);
+    }
+  });
 
-app.get("/health", (_req, res) => res.json({ ok: true }));
+  setTimeout(() => {
+    logger.error({}, "Forced shutdown after timeout");
+    process.exit(1);
+  }, 30000);
+}
 
-const port = Number(process.env.PORT) || 4000;
-app.listen(port, () => {
-  console.log(`API running on http://localhost:${port}`);
+process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+
+process.on("unhandledRejection", (reason, promise) => {
+  logger.error({ reason, promise: String(promise) }, "Unhandled Promise Rejection");
+});
+
+process.on("uncaughtException", (error) => {
+  logger.error({ error: error.message, stack: error.stack }, "Uncaught Exception");
+  gracefulShutdown("uncaughtException");
 });
