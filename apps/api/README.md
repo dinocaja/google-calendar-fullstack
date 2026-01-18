@@ -125,10 +125,6 @@ yarn prisma migrate dev
 yarn prisma studio
 ```
 
-## API Documentation
-
-See [docs/api-contract.md](./docs/api-contract.md) for complete API specification.
-
 ### Endpoints
 
 | Method | Path | Description |
