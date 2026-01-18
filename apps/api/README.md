@@ -60,15 +60,6 @@ JWT_SECRET=your-secret-key-min-32-chars-long
 
 **Note**: `JWT_SECRET` must be at least 32 characters.
 
-### 4. Google Cloud Setup
-
-1. Create a project at [Google Cloud Console](https://console.cloud.google.com/)
-2. Enable **Google Calendar API**
-3. Configure **OAuth consent screen** with test users
-4. Create **OAuth 2.0 Client ID** (Web application)
-5. Add redirect URI: `http://localhost:4000/auth/google/callback`
-6. Copy credentials to `.env`
-
 ### 5. Database Setup
 
 Run Prisma migrations and generate the client:

@@ -24,7 +24,43 @@ A fullstack TypeScript application for managing Google Calendar events with OAut
 
 ## Quick Start
 
-### 1. Start PostgreSQL Database
+**TL;DR - Run these commands in order:**
+
+```bash
+# 1. Install all dependencies (from root)
+yarn install
+
+# 2. Start PostgreSQL
+docker-compose -f docker/docker-compose.yml up -d
+
+# 3. Setup backend
+cd apps/api
+# Create .env file here (see step 3 below)
+yarn prisma migrate dev
+yarn prisma generate
+yarn dev
+
+# 4. In a new terminal, setup frontend
+cd apps/web
+# Create .env file here (see step 6 below)
+yarn dev
+```
+
+Then setup Google OAuth credentials (see step 8) and visit `http://localhost:5173`
+
+---
+
+### 1. Install Dependencies
+
+From the repository root, install all dependencies:
+
+```bash
+yarn install
+```
+
+This will install dependencies for both frontend and backend (monorepo workspace setup).
+
+### 2. Start PostgreSQL Database
 
 From the repository root:
 
@@ -37,16 +73,15 @@ This starts PostgreSQL 16 on `localhost:5432` with:
 - **Password**: `calendar_pass`
 - **Database**: `calendar_db`
 
-### 2. Setup Backend
+### 3. Setup Backend Environment
 
 Navigate to the API directory:
 
 ```bash
 cd apps/api
-yarn install
 ```
 
-Create `.env` file in `apps/api/`:
+Create a `.env` file in `apps/api/`:
 
 ```env
 PORT=4000
@@ -61,6 +96,8 @@ JWT_SECRET=your-secret-key-min-32-chars-long
 
 **Note**: `JWT_SECRET` must be at least 32 characters.
 
+### 4. Setup Database
+
 Run database migrations:
 
 ```bash
@@ -68,7 +105,7 @@ yarn prisma migrate dev
 yarn prisma generate
 ```
 
-Start the backend server:
+### 5. Start Backend
 
 ```bash
 yarn dev
@@ -76,22 +113,21 @@ yarn dev
 
 Backend will run at `http://localhost:4000`
 
-### 3. Setup Frontend
+### 6. Setup Frontend Environment
 
 Open a new terminal and navigate to the web directory:
 
 ```bash
 cd apps/web
-yarn install
 ```
 
-Create `.env` file in `apps/web/`:
+Create a `.env` file in `apps/web/`:
 
 ```env
 VITE_API_BASE_URL=http://localhost:4000
 ```
 
-Start the frontend server:
+### 7. Start Frontend
 
 ```bash
 yarn dev
@@ -99,7 +135,19 @@ yarn dev
 
 Frontend will run at `http://localhost:5173`
 
-### 5. Access Application
+### 8. Setup Google OAuth (Required for Login)
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select existing
+3. Enable **Google Calendar API**
+4. Configure **OAuth consent screen**:
+   - Add your email as a test user
+   - Add scopes: `calendar.events`, `userinfo.email`, `userinfo.profile`
+5. Create **OAuth 2.0 Client ID** (Web application)
+6. Add authorized redirect URI: `http://localhost:4000/auth/google/callback`
+7. Copy Client ID and Client Secret to `apps/api/.env`
+
+### 9. Access Application
 
 Open `http://localhost:5173` in your browser and log in with Google.
 
@@ -149,6 +197,13 @@ yarn lint             # Run ESLint
 | POST | `/events` | Create new event |
 
 ## Troubleshooting
+
+**"Cannot find module 'dotenv/config'" error**
+
+This means you need to install dependencies first. Run from the repository root:
+```bash
+yarn install
+```
 
 **Database connection issues**
 ```bash
